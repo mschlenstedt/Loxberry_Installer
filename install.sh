@@ -1085,7 +1085,9 @@ fi
 export PERL5LIB=$LBHOME/libs/perllib
 IP=$(perl -e 'use LoxBerry::System; $ip = LoxBerry::System::get_localip(); print $ip; exit;')
 echo -e "\n\n\n${GREEN}WE ARE DONE! :-)${RESET}"
-echo -e "\n\n${RED}You have to reboot your LoxBerry now!${RESET}"
+echo -e "\n\n${RED}If you are *NOT* connected via ethernet and dhcp, configure your"
+echo -e "network now with dietpi-config!"
+echo -e "\nIf you are done, you have to reboot your LoxBerry now!${RESET}"
 echo -e "\n${GREEN}Then point your browser to http://$IP or http://loxberry"
 echo -e "\nIf you would like to login via SSH, use user 'loxberry' and pass 'loxberry'."
 echo -e "Root's password is 'loxberry', too (you cannot login directly via SSH)."
