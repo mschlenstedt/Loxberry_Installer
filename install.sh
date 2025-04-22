@@ -17,6 +17,7 @@ export LBHOMEDIR=$LBHOME
 export PERL5LIB=$LBHOME/libs/perllib
 export APT_LISTCHANGES_FRONTEND="none"
 export DEBIAN_FRONTEND="noninteractive"
+export PATH=$PATH:/usr/sbin/
 
 # Run as root
 if (( $EUID != 0 )); then
@@ -31,7 +32,7 @@ if [ -e /boot/rootfsresized ]; then
 fi
 
 echo -e "\n\nNote! If you were logged in as user 'loxberry' and used 'su' to switch to the root account, your connection may be lost now...\n\n"
-killall -u loxberry
+/usr/bin/killall -u loxberry
 sleep 3
 
 # Commandline options
@@ -50,8 +51,8 @@ done
 shift $((OPTIND-1))
 
 # install needed packages
-apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install jq git lsb-release
+/usr/bin/apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
+/usr/bin/apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install jq git lsb-release
 
 # Stop loxberry Service
 if /bin/systemctl --no-pager status apache2.service; then
@@ -77,52 +78,52 @@ if /bin/systemctl --no-pager status createtmpfs.service; then
 fi
 
 # Clear screen
-tput clear
+/usr/bin/tput clear
 
 # Formating - to be used in echo's
-BLACK=`tput setaf 0`
-RED=`tput setaf 1`
-GREEN=`tput setaf 2`
-YELLOW=`tput setaf 3`
-BLUE=`tput setaf 4`
-MAGENTA=`tput setaf 5`
-CYAN=`tput setaf 6`
-WHITE=`tput setaf 7`
-BOLD=`tput bold`
-ULINE=`tput smul`
-RESET=`tput sgr0`
+BLACK=`/usr/bin/tput setaf 0`
+RED=`/usr/bin/tput setaf 1`
+GREEN=`/usr/bin/tput setaf 2`
+YELLOW=`/usr/bin/tput setaf 3`
+BLUE=`/usr/bin/tput setaf 4`
+MAGENTA=`/usr/bin/tput setaf 5`
+CYAN=`/usr/bin/tput setaf 6`
+WHITE=`/usr/bin/tput setaf 7`
+BOLD=`/usr/bin/tput bold`
+ULINE=`/usr/bin/tput smul`
+RESET=`/usr/bin/tput sgr0`
 
 ########################################################################
 # Functions
 
 # Horizontal Rule
 HR () {
-	echo -en "${!1}"
-	printf '%.s─' $(seq 1 $(tput cols))
-	echo -e "${RESET}"
+	/usr/bin/echo -en "${!1}"
+	printf '%.s─' $(seq 1 $(/usr/bin/tput cols))
+	/usr/bin/echo -e "${RESET}"
 }
 
 # Section
 TITLE () {
-	echo -e ""
+	/usr/bin/echo -e ""
 	HR "WHITE"
-	echo -e "${BOLD}$1${RESET}"
+	/usr/bin/echo -e "${BOLD}$1${RESET}"
 	HR "WHITE"
-	echo -e ""
+	/usr/bin/echo -e ""
 }
 
 # Messages
 OK () {
-	echo -e "\n${GREEN}[  OK   ]${RESET} .... $1"
+	/usr/bin/echo -e "\n${GREEN}[  OK   ]${RESET} .... $1"
 }
 FAIL () {
-	echo -e "\n${RED}[FAILED ]${RESET} .... $1"
+	/usr/bin/echo -e "\n${RED}[FAILED ]${RESET} .... $1"
 }
 WARNING () {
-	echo -e "\n${MAGENTA}[WARNING]${RESET} .... $1"
+	/usr/bin/echo -e "\n${MAGENTA}[WARNING]${RESET} .... $1"
 }
 INFO () {
-	echo -e "\n${YELLOW}[ INFO  ]${RESET} .... $1"
+	/usr/bin/echo -e "\n${YELLOW}[ INFO  ]${RESET} .... $1"
 }
 
 #
@@ -131,7 +132,7 @@ INFO () {
 
 # Main Script
 HR "GREEN"
-echo -e "${BOLD}LoxBerry - BEYOND THE LIMITS${RESET}"
+/usr/bin/echo -e "${BOLD}LoxBerry - BEYOND THE LIMITS${RESET}"
 HR "GREEN"
 
 # Read Distro infos
@@ -173,17 +174,17 @@ fi
 
 # Check correct distribution
 if [ ! -e /boot/dietpi/.version ]; then
-	echo -e "\n${RED}This seems not to be a DietPi Image. LoxBerry can only be installed on DietPi.\n"
-	echo -e "We expect $TARGET_PRETTY_NAME as distribution."
-	echo -e "Please download the correct image from ${ULINE}https://dietpi.com\n${RESET}"
+	/usr/bin/echo -e "\n${RED}This seems not to be a DietPi Image. LoxBerry can only be installed on DietPi.\n"
+	/usr/bin/echo -e "We expect $TARGET_PRETTY_NAME as distribution."
+	/usr/bin/echo -e "Please download the correct image from ${ULINE}https://dietpi.com\n${RESET}"
 	exit 1
 fi
 
 if [ $VERSION_ID -ne $TARGET_VERSION_ID ]; then
-	echo -e "\n${RED}You are running $PRETTY_NAME. This distribution"
-	echo -e "is not supported by LoxBerry.\n"
-	echo -e "We expect $TARGET_PRETTY_NAME as distribution."
-	echo -e "Please download the correct image from ${ULINE}https://dietpi.com\n${RESET}"
+	/usr/bin/echo -e "\n${RED}You are running $PRETTY_NAME. This distribution"
+	/usr/bin/echo -e "is not supported by LoxBerry.\n"
+	/usr/bin/echo -e "We expect $TARGET_PRETTY_NAME as distribution."
+	/usr/bin/echo -e "Please download the correct image from ${ULINE}https://dietpi.com\n${RESET}"
 	exit 1
 fi
 
@@ -197,13 +198,13 @@ fi
 if [ ! -z $BRANCH ]; then
 	LBVERSION="Branch $BRANCH (latest)"
 else
-	RELEASEJSON=`curl -s \
+	RELEASEJSON=`/usr/bin/curl -s \
 		-H "Accept: application/vnd.github+json" \
 		https://api.github.com/repos/mschlenstedt/Loxberry/releases/$TARGETRELEASE`
 
-	LBVERSION=$(echo $RELEASEJSON | jq -r ".tag_name")
-	LBNAME=$(echo $RELEASEJSON | jq -r ".name")
-	LBTARBALL=$(echo $RELEASEJSON | jq -r ".tarball_url")
+	LBVERSION=$(/usr/bin/echo $RELEASEJSON | /usr/bin/jq -r ".tag_name")
+	LBNAME=$(/usr/bin/echo $RELEASEJSON | /usr/bin/jq -r ".name")
+	LBTARBALL=$(/usr/bin/echo $RELEASEJSON | /usr/bin/jq -r ".tarball_url")
 
 	if [ -z $LBVERSION ] || [ $LBVERSION = "null" ]; then
 		FAIL "Cannot download latest release information from GitHub.\n"
@@ -212,17 +213,17 @@ else
 fi
 
 # Welcome screen with overview
-echo -e "\nThis script will install ${BOLD}${ULINE}LoxBerry $LBVERSION${RESET} on your system.\n"
-echo -e "${RED}${BOLD}WARNING!${RESET}${RED} You cannot undo the installation! Your system will be converted"
-echo -e "into a LoxBerry with no return! Nothing will be like it was before ;-)${RESET}"
-echo -e "\n${ULINE}Your system seems to be:${RESET}\n"
-echo -e "Distribution:       $PRETTY_NAME"
-echo -e "DietPi Version:     $G_DIETPI_VERSION_CORE.$G_DIETPI_VERSION_SUB"
-echo -e "Hardware Model:     $G_HW_MODEL_NAME"
-echo -e "Architecture:       $G_HW_ARCH_NAME"
-echo -e "\n\nHit ${BOLD}<CTRL>+C${RESET} now to stop, any other input will continue.\n"
+/usr/bin/echo -e "\nThis script will install ${BOLD}${ULINE}LoxBerry $LBVERSION${RESET} on your system.\n"
+/usr/bin/echo -e "${RED}${BOLD}WARNING!${RESET}${RED} You cannot undo the installation! Your system will be converted"
+/usr/bin/echo -e "into a LoxBerry with no return! Nothing will be like it was before ;-)${RESET}"
+/usr/bin/echo -e "\n${ULINE}Your system seems to be:${RESET}\n"
+/usr/bin/echo -e "Distribution:       $PRETTY_NAME"
+/usr/bin/echo -e "DietPi Version:     $G_DIETPI_VERSION_CORE.$G_DIETPI_VERSION_SUB"
+/usr/bin/echo -e "Hardware Model:     $G_HW_MODEL_NAME"
+/usr/bin/echo -e "Architecture:       $G_HW_ARCH_NAME"
+/usr/bin/echo -e "\n\nHit ${BOLD}<CTRL>+C${RESET} now to stop, any other input will continue.\n"
 read -n 1 -s -r -p "Press any key to continue"
-tput clear
+/usr/bin/tput clear
 
 # Download Release
 TITLE "Downloading LoxBerry sources from GitHub..."
@@ -232,7 +233,7 @@ mkdir -p $LBHOME
 cd $LBHOME
 
 if [ ! -z $BRANCH ]; then
-	git clone https://github.com/mschlenstedt/Loxberry.git -b $BRANCH
+	/usr/bin/git clone https://github.com/mschlenstedt/Loxberry.git -b $BRANCH
 	if [ ! -d $LBHOME/Loxberry ]; then
 		FAIL "Could not download LoxBerry sources.\n"
 		exit 1
@@ -243,7 +244,7 @@ if [ ! -z $BRANCH ]; then
 		rm -r $LBHOME/Loxberry
 	fi
 else
-	curl -L -o $LBHOME/src.tar.gz $LBTARBALL
+	/usr/bin/curl -L -o $LBHOME/src.tar.gz $LBTARBALL
 	if [ ! -e $LBHOME/src.tar.gz ]; then
 		FAIL "Could not download LoxBerry sources.\n"
 		exit 1
@@ -253,7 +254,7 @@ else
 	# Extracting sources
 	TITLE "Extracting LoxBerry sources..."
 
-	tar xvfz src.tar.gz --strip-components=1 > /dev/null
+	/usr/bin/tar xvfz src.tar.gz --strip-components=1 > /dev/null
 	if [ $? != 0 ]; then
 		FAIL "Could not extract LoxBerry sources.\n"
 		exit 1
@@ -266,11 +267,11 @@ fi
 # Adding User loxberry
 TITLE "Adding user 'loxberry', setting default passwd, resetting user 'dietpi'..."
 
-killall -u loxberry
-sleep 3
+/usr/bin/killall -u loxberry
+/usr/bin/sleep 3
 
-deluser --quiet loxberry > /dev/null 2>&1
-adduser --no-create-home --home $LBHOME --disabled-password --gecos "" loxberry
+/usr/sbin/deluser --quiet loxberry > /dev/null 2>&1
+/usr/sbin/adduser --no-create-home --home $LBHOME --disabled-password --gecos "" loxberry
 if [ $? != 0 ]; then
 	FAIL "Could not create user 'loxberry'.\n"
 	exit 1
@@ -278,7 +279,7 @@ else
 	OK "Successfully created user 'loxberry'."
 fi
 
-echo 'loxberry:loxberry' | /usr/sbin/chpasswd -c SHA512
+/usr/bin/echo 'loxberry:loxberry' | /usr/sbin/chpasswd -c SHA512
 if [ $? != 0 ]; then
 	FAIL "Could not set password for user 'loxberry'.\n"
 	exit 1
@@ -286,7 +287,7 @@ else
 	OK "Successfully set default password for user 'loxberry'."
 fi
 
-echo 'root:loxberry' | /usr/sbin/chpasswd -c SHA512
+/usr/bin/echo 'root:loxberry' | /usr/sbin/chpasswd -c SHA512
 if [ $? != 0 ]; then
 	FAIL "Could not set password for user 'root'.\n"
 	exit 1
@@ -294,8 +295,8 @@ else
 	OK "Successfully set default password for user 'root'."
 fi
 
-newdietpipassword=$(echo $random | md5sum | head -c 20; echo)
-echo "dietpi:$newdietpipassword" | /usr/sbin/chpasswd -c SHA512
+newdietpipassword=$(/usr/bin/echo $random | /usr/bin/md5sum | /usr/bin/head -c 20; echo)
+/usr/bin/echo "dietpi:$newdietpipassword" | /usr/sbin/chpasswd -c SHA512
 if [ $? != 0 ]; then
 	FAIL "Could not set password for user 'dietpi'.\n"
 	exit 1
@@ -307,16 +308,16 @@ fi
 # Configuring hardware architecture
 TITLE "Configuring your hardware architecture $G_HW_ARCH_NAM..."
 
-HWMODELFILENAME=$(cat /boot/dietpi/func/dietpi-obtain_hw_model | grep "G_HW_MODEL $G_HW_MODEL " | awk '/.*G_HW_MODEL .*/ {for(i=4; i<=NF; ++i) printf "%s_", $i; print ""}' | sed 's/\//_/g' | sed 's/[()]//g' | sed 's/_$//' | tr '[:upper:]' '[:lower:]')
-echo $HWMODELFILENAME > $LBHOME/config/system/is_hwmodel_$HWMODELFILENAME.cfg
-echo $G_HW_ARCH_NAME > $LBHOME/config/system/is_arch_$G_HW_ARCH_NAME.cfg
+HWMODELFILENAME=$(/usr/bin/cat /boot/dietpi/func/dietpi-obtain_hw_model | /usr/bin/grep "G_HW_MODEL $G_HW_MODEL " | /usr/bin/awk '/.*G_HW_MODEL .*/ {for(i=4; i<=NF; ++i) printf "%s_", $i; print ""}' | /usr/bin/sed 's/\//_/g' | /usr/bin/sed 's/[()]//g' | /usr/bin/sed 's/_$//' | /usr/bin/tr '[:upper:]' '[:lower:]')
+/usr/bin/echo $HWMODELFILENAME > $LBHOME/config/system/is_hwmodel_$HWMODELFILENAME.cfg
+/usr/bin/echo $G_HW_ARCH_NAME > $LBHOME/config/system/is_arch_$G_HW_ARCH_NAME.cfg
 
 # Compatibility - this was standard until LB3.0.0.0
-if echo $HWMODELFILENAME | grep -q "x86_64"; then
-	echo "x64" > $LBHOME/config/system/is_x64.cfg
+if /usr/bin/echo $HWMODELFILENAME | /usr/bin/grep -q "x86_64"; then
+	/usr/bin/echo "x64" > $LBHOME/config/system/is_x64.cfg
 fi
-if echo $HWMODELFILENAME | grep -q "raspberry"; then
-	echo "raspberry" > $LBHOME/config/system/is_raspberry.cfg
+if /usr/bin/echo $HWMODELFILENAME | /usr/bin/grep -q "raspberry"; then
+	/usr/bin/echo "raspberry" > $LBHOME/config/system/is_raspberry.cfg
 fi
 
 if [ ! -e $LBHOME/config/system/is_arch_$G_HW_ARCH_NAME.cfg ]; then
@@ -338,28 +339,28 @@ TITLE "Installing additional software packages from apt repository..."
 /boot/dietpi/func/dietpi-set_software apt cache clean
 
 # Configure PHP - we want PHP7.4 as default while Bookworm only has 8.2
-curl -sL https://packages.sury.org/php/apt.gpg | gpg --dearmor | tee /usr/share/keyrings/deb.sury.org-php.gpg >/dev/null
-echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
+/usr/bin/curl -sL https://packages.sury.org/php/apt.gpg | /usr/bin/gpg --dearmor | /usr/bin/tee /usr/share/keyrings/deb.sury.org-php.gpg >/dev/null
+/usr/bin/echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
 
-apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
+/usr/bin/apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
 
 if [ -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
         PACKAGES=""
-        echo ""
+        /usr/bin/echo ""
         while read entry
         do
-                if echo $entry | grep -Eq "^ii "; then
-                        VAR=$(echo $entry | sed "s/  / /g" | cut -d " " -f 2 | sed "s/:.*\$//")
-                        PINFO=$(apt-cache show $VAR 2>&1)
-                        if echo $PINFO | grep -Eq "N: Unable to locate"; then
+                if /usr/bin/echo $entry | /usr/bin/grep -Eq "^ii "; then
+                        VAR=$(/usr/bin/echo $entry | sed "s/  / /g" | /usr/bin/cut -d " " -f 2 | /usr/bin/sed "s/:.*\$//")
+                        PINFO=$(/usr/bin/apt-cache show $VAR 2>&1)
+                        if /usr/bin/echo $PINFO | /usr/bin/grep -Eq "N: Unable to locate"; then
                         	WARNING "Unable to locate package $PACKAGE. Skipping..."
                                 continue
                         fi
-                        PACKAGE=$(echo $PINFO | grep "Package: " | cut -d " " -f 2)
+                        PACKAGE=$(echo $PINFO | /usr/bin/grep "Package: " | /usr/bin/cut -d " " -f 2)
 			if [ -z $PACKAGE ] || [ $PACKAGE = "" ]; then
 				continue
 			fi
-                        if dpkg -s $PACKAGE > /dev/null 2>&1; then
+                        if /usr/bin/dpkg -s $PACKAGE > /dev/null 2>&1; then
                         	INFO "$PACKAGE seems to be already installed. Skipping..."
                                 continue
                         fi
@@ -372,12 +373,12 @@ else
         exit 1
 fi
 
-echo ""
-echo "These packages will be installed now:"
-echo $PACKAGES
-echo ""
+/usr/bin/echo ""
+/usr/bin/echo "These packages will be installed now:"
+/usr/bin/echo $PACKAGES
+/usr/bin/echo ""
 
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install $PACKAGES
+/usr/bin/apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install $PACKAGES
 if [ $? != 0 ]; then
         FAIL "Could not install (at least some) queued packages.\n"
 	exit 1
@@ -387,19 +388,19 @@ fi
 
 /boot/dietpi/func/dietpi-set_software apt compress enable
 /boot/dietpi/func/dietpi-set_software apt cache clean
-apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
+/usr/bin/apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
 
 # Remove dhcpd - See issue 135
 TITLE "Removing dhcpcd5..."
 
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages purge dhcpcd5
+/usr/bin/apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages purge dhcpcd5
 
 # Remove appamor
 TITLE "Removing AppArmor..."
 
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages purge apparmor
+/usr/bin/apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages purge apparmor
 
-apt-get -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages --purge autoremove
+/usr/bin/apt-get -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages --purge autoremove
 
 # Adding user loxberry to different additional groups
 TITLE "Adding user LoxBerry to some additional groups..."
@@ -420,27 +421,27 @@ OK "Successfully configured additional groups."
 TITLE "Settings up systemwide environments..."
 
 # LoxBerry Home Directory in Environment
-awk -v s="LBHOMEDIR=$LBHOME" '/^LBHOMEDIR=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBPHTMLAUTH=$LBHOME/webfrontend/htmlauth/plugins" '/^LBPHTMLAUTH=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBPHTML=$LBHOME/webfrontend/html/plugins" '/^LBPHTML=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBPTEMPL=$LBHOME/templates/plugins" '/^LBPTEMPL=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBPDATA=$LBHOME/data/plugins" '/^LBPDATA=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBPLOG=$LBHOME/log/plugins" '/^LBPLOG=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBPCONFIG=$LBHOME/config/plugins" '/^LBPCONFIG=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBPBIN=$LBHOME/bin/plugins" '/^LBPBIN=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBSHTMLAUTH=$LBHOME/webfrontend/htmlauth/system" '/^LBSHTMLAUTH=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBSHTML=$LBHOME/webfrontend/html/system" '/^LBSHTML=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBSTEMPL=$LBHOME/templates/system" '/^LBSTEMPL=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBSDATA=$LBHOME/data/system" '/^LBSDATA=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBSLOG=$LBHOME/log/system" '/^LBSLOG=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBSTMPFSLOG=$LBHOME/log/system_tmpfs" '/^LBSTMPFSLOG=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBSCONFIG=$LBHOME/config/system" '/^LBSCONFIG=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBSBIN=$LBHOME/bin" '/^LBSBIN=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="LBSSBIN=$LBHOME/sbin" '/^LBSSBIN=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
-awk -v s="PERL5LIB=$LBHOME/libs/perllib" '/^PERL5LIB=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBHOMEDIR=$LBHOME" '/^LBHOMEDIR=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBPHTMLAUTH=$LBHOME/webfrontend/htmlauth/plugins" '/^LBPHTMLAUTH=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBPHTML=$LBHOME/webfrontend/html/plugins" '/^LBPHTML=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBPTEMPL=$LBHOME/templates/plugins" '/^LBPTEMPL=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBPDATA=$LBHOME/data/plugins" '/^LBPDATA=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBPLOG=$LBHOME/log/plugins" '/^LBPLOG=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBPCONFIG=$LBHOME/config/plugins" '/^LBPCONFIG=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBPBIN=$LBHOME/bin/plugins" '/^LBPBIN=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBSHTMLAUTH=$LBHOME/webfrontend/htmlauth/system" '/^LBSHTMLAUTH=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBSHTML=$LBHOME/webfrontend/html/system" '/^LBSHTML=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBSTEMPL=$LBHOME/templates/system" '/^LBSTEMPL=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBSDATA=$LBHOME/data/system" '/^LBSDATA=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBSLOG=$LBHOME/log/system" '/^LBSLOG=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBSTMPFSLOG=$LBHOME/log/system_tmpfs" '/^LBSTMPFSLOG=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBSCONFIG=$LBHOME/config/system" '/^LBSCONFIG=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBSBIN=$LBHOME/bin" '/^LBSBIN=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="LBSSBIN=$LBHOME/sbin" '/^LBSSBIN=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
+/usr/bin/awk -v s="PERL5LIB=$LBHOME/libs/perllib" '/^PERL5LIB=/{$0=s;f=1} {a[++n]=$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' /etc/environment
 
 # Set environments for Apache
-sed -i -e "s#/opt/loxberry/#$LBHOME/#g" $LBHOME/system/apache2/envvars 
+/usr/bin/sed -i -e "s#/opt/loxberry/#$LBHOME/#g" $LBHOME/system/apache2/envvars 
 
 # Environment Variablen laden
 source /etc/environment
@@ -466,7 +467,7 @@ fi
 ln -s $LBHOME/system/sudoers/ /etc/sudoers.d
 
 # sudoers: Replace /opt/loxberry with current home path
-sed -i -e "s#/opt/loxberry/#$LBHOME/#g" $LBHOME/system/sudoers/lbdefaults
+/usr/bin/sed -i -e "s#/opt/loxberry/#$LBHOME/#g" $LBHOME/system/sudoers/lbdefaults
 
 if [ ! -L /etc/sudoers.d ]; then
 	FAIL "Could not set up sudoers.\n"
@@ -499,7 +500,7 @@ if [ -e /etc/systemd/system/loxberry.service ]; then
 	rm /etc/systemd/system/loxberry.service
 fi
 ln -s $LBHOME/system/systemd/loxberry.service /etc/systemd/system/loxberry.service
-echo ""
+/usr/bin/echo ""
 /bin/systemctl daemon-reload
 /bin/systemctl enable loxberry.service
 
@@ -515,7 +516,7 @@ if [ -e /etc/systemd/system/createtmpfs.service ]; then
 	rm /etc/systemd/system/createtmpfs.service
 fi
 ln -s $LBHOME/system/systemd/createtmpfs.service /etc/systemd/system/createtmpfs.service
-echo ""
+/usr/bin/echo ""
 /bin/systemctl daemon-reload
 /bin/systemctl enable createtmpfs.service
 
@@ -531,7 +532,7 @@ if [ -e /etc/systemd/system/ssdpd.service ]; then
 	rm /etc/systemd/system/ssdpd.service
 fi
 ln -s $LBHOME/system/systemd/ssdpd.service /etc/systemd/system/ssdpd.service
-echo ""
+/usr/bin/echo ""
 /bin/systemctl daemon-reload
 /bin/systemctl enable ssdpd.service
 
@@ -547,7 +548,7 @@ if [ -e /etc/systemd/system/mosquitto.service ]; then
 	rm /etc/systemd/system/mosquitto.service
 fi
 ln -s $LBHOME/system/systemd/mosquitto.service /etc/systemd/system/mosquitto.service
-echo ""
+/usr/bin/echo ""
 /bin/systemctl daemon-reload
 /bin/systemctl enable mosquitto.service
 
@@ -609,9 +610,8 @@ else
 	OK "Successfully set up PHP ${PHPVER_TEST}."
 fi
 
-
 TITLE "Enabling PHP ${PHPVER_PROD}..."
-update-alternatives --set php /usr/bin/php${PHPVER_PROD}
+/usr/bin/update-alternatives --set php /usr/bin/php${PHPVER_PROD}
 
 
 # Configuring Apache2
@@ -632,12 +632,12 @@ else
 	OK "Successfully set up Apache2 Config."
 fi
 
-a2dismod php*
-a2dissite 001-default-ssl
+/usr/sbin/a2dismod php*
+/usr/sbin/a2dissite 001-default-ssl
 rm $LBHOME/system/apache2/mods-available/php*
 rm $LBHOME/system/apache2/mods-enabled/php*
 cp /etc/apache2.orig/mods-available/php* /etc/apache2/mods-available
-a2enmod php${PHPVER_PROD}
+/usr/sbin/a2enmod php${PHPVER_PROD}
 
 # Disable PrivateTmp for Apache2 on systemd
 if [ ! -e /etc/systemd/system/apache2.service.d/privatetmp.conf ]; then
@@ -678,7 +678,7 @@ fi
 # Configuring Python 3 - reenable pip installations
 TITLE "Configuring Python3..."
 
-echo -e '[global]\nbreak-system-packages=true' > /etc/pip.conf
+/usr/bin/echo -e '[global]\nbreak-system-packages=true' > /etc/pip.conf
 if [ -e /etc/pip.conf ]; then
 	OK "Python3 configured successfully.\n"
 else
@@ -696,7 +696,7 @@ if [ -L /etc/samba ]; then
     rm /etc/samba
 fi
 ln -s $LBHOME/system/samba /etc/samba
-sed -i -e "s#/opt/loxberry/#$LBHOME/#g" $LBHOME/system/samba/smb.conf
+/usr/bin/sed -i -e "s#/opt/loxberry/#$LBHOME/#g" $LBHOME/system/samba/smb.conf
 
 if [ ! -L /etc/samba ]; then
 	FAIL "Could not set up Samba Config.\n"
@@ -710,10 +710,10 @@ else
 	OK "Successfully set up Samba Config."
 fi
 
-if systemctl --no-pager status smbd; then
+if /bin/systemctl --no-pager status smbd; then
 	/bin/systemctl restart smbd
 fi
-if systemctl --no-pager status nmbd; then
+if /bin/systemctl --no-pager status nmbd; then
 	/bin/systemctl restart nmbd
 fi
 
@@ -725,7 +725,7 @@ else
 fi
 
 # Add Samba default user
-(echo 'loxberry'; echo 'loxberry') | smbpasswd -a -s loxberry
+(/usr/bin/echo 'loxberry'; echo 'loxberry') | /usr/bin/smbpasswd -a -s loxberry
 
 # Configuring VSFTP
 TITLE "Configuring VSFTP..."
@@ -745,7 +745,7 @@ else
 	OK "Successfully set up VSFTPD Config."
 fi
 
-if systemctl --no-pager status vsftpd; then
+if /bin/systemctl --no-pager status vsftpd; then
 	/bin/systemctl restart vsftpd
 fi
 
@@ -815,7 +815,7 @@ if [ -e /etc/udev/rules.d/99-usbmount.rules ]; then
 	rm /etc/udev/rules.d/99-usbmount.rules
 fi
 ln -s $LBHOME/system/udev/usbmount.rules /etc/udev/rules.d/99-usbmount.rules
-sed -i -e "s#/opt/loxberry/#$LBHOME/#g" $LBHOME/system/udev/usbmount.rules 
+/usr/bin/sed -i -e "s#/opt/loxberry/#$LBHOME/#g" $LBHOME/system/udev/usbmount.rules 
 
 /bin/systemctl daemon-reload
 
@@ -840,7 +840,7 @@ if [ -L /etc/creds ]; then
     rm /etc/creds
 fi
 ln -s $LBHOME/system/samba/credentials /etc/creds
-sed -i -e "s#/opt/loxberry/#$LBHOME/#g" $LBHOME/system/autofs/loxberry_smb.autofs
+/usr/bin/sed -i -e "s#/opt/loxberry/#$LBHOME/#g" $LBHOME/system/autofs/loxberry_smb.autofs
 ln -s $LBHOME/system/autofs/loxberry_smb.autofs /etc/auto.master.d/loxberry_smb.autofs
 chmod 0755 $LBHOME/system/autofs/loxberry_smb.autofs
 rm $LBHOME/system/storage/smb/.dummy
@@ -866,12 +866,12 @@ if [ -L /etc/watchdog.conf ]; then
     rm /etc/watchdog.conf
 fi
 if ! cat /etc/default/watchdog | grep -q -e "watchdog_options"; then
-	echo 'watchdog_options="-v"' >> /etc/default/watchdog
+	/usr/bin/echo 'watchdog_options="-v"' >> /etc/default/watchdog
 fi
-if ! cat /etc/default/watchdog | grep -q -e "watchdog_options.*-v"; then
-	/bin/sed -i 's#watchdog_options="\(.*\)"#watchdog_options="\1 -v"#' /etc/default/watchdog
+if ! cat /etc/default/watchdog | /usr/bin/grep -q -e "watchdog_options.*-v"; then
+	/usr/bin/sed -i 's#watchdog_options="\(.*\)"#watchdog_options="\1 -v"#' /etc/default/watchdog
 fi
-sed -i -e "s#/opt/loxberry/#$LBHOME/#g" $LBHOME/system/watchdog/rsyslog.conf
+/usr/bin/sed -i -e "s#/opt/loxberry/#$LBHOME/#g" $LBHOME/system/watchdog/rsyslog.conf
 ln -f -s $LBHOME/system/watchdog/watchdog.conf /etc/watchdog.conf
 ln -f -s $LBHOME/system/watchdog/rsyslog.conf /etc/rsyslog.d/10-watchdog.conf
 /bin/systemctl restart rsyslog.service
@@ -907,7 +907,7 @@ fi
 TITLE "Configuring listchanges to be quit..."
 
 if [ -e /etc/apt/listchanges.conf ]; then
-	sed -i 's/frontend=pager/frontend=none/' /etc/apt/listchanges.conf
+	/usr/bin/sed -i 's/frontend=pager/frontend=none/' /etc/apt/listchanges.conf
 fi
 
 OK "Successfully configured listchanges."
@@ -917,7 +917,7 @@ TITLE "Reconfigure PAM to allow shorter (weaker) passwords..."
 
 sed -i 's/obscure/minlen=1/' /etc/pam.d/common-password
 
-if ! cat /etc/pam.d/common-password | grep -q "minlen="; then
+if ! /usr/bin/cat /etc/pam.d/common-password | /usr/bin/grep -q "minlen="; then
 	FAIL "Could not reconfigure PAM.\n"
 	exit 1
 else
@@ -955,7 +955,7 @@ fi
 # Enable LoxBerry Update after next reboot
 TITLE "Enable LoxBerry update after next reboot..."
 
-touch /boot/do_lbupdate
+/usr/bin/touch /boot/do_lbupdate
 
 if [ ! -e /boot/do_lbupdate ]; then
 	FAIL "Could not enable LoxBerry Update.\n"
@@ -968,10 +968,10 @@ fi
 TITLE "Automatically repair filesystem errors on boot..."
 
 if [ ! -f /etc/default/rcS ]; then
-	echo "FSCKFIX=yes" > /etc/default/rcS
+	/usr/bin/echo "FSCKFIX=yes" > /etc/default/rcS
 else
 	if ! cat /etc/default/rcS | grep -q "FSCKFIX"; then
-		echo "FSCKFIX=yes" >> /etc/default/rcS
+		/usr/bin/echo "FSCKFIX=yes" >> /etc/default/rcS
 	fi
 fi
 
@@ -984,7 +984,6 @@ fi
 
 # Disable SSH Root password access
 TITLE "Disable root login via ssh and password..."
-
 /boot/dietpi/func/dietpi-set_software disable_ssh_password_logins root
 
 # Installing NodeJS
@@ -993,16 +992,16 @@ TITLE "Installing NodeJS"
 
 # Installing YARN
 TITLE "Installing Yarn"
-curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null
-echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list
+/usr/bin/curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | /usr/bin/gpg --dearmor | /usr/bin/tee /usr/share/keyrings/yarnkey.gpg >/dev/null
+/usr/bin/echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | /usr/bin/tee /etc/apt/sources.list.d/yarn.list
 
-apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
-apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install yarn
+/usr/bin/apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
+/usr/bin/apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install yarn
 
 # Configuring /etc/hosts
 TITLE "Setting up /etc/hosts and /etc/hostname..."
 
-touch /etc/mailname
+/usr/bin/touch /etc/mailname
 $LBHOME/sbin/changehostname.sh loxberry
 
 OK "Successfully set up /etc/hosts."
@@ -1022,8 +1021,8 @@ fi
 # Create Config
 TITLE "Create LoxBerry Config from Defaults..."
 
-su loxberry -c "export PERL5LIB=$LBHOME/libs/perllib && $LBHOME/bin/createconfig.pl"
-su loxberry -c "export PERL5LIB=$LBHOME/libs/perllib && $LBHOME/bin/createconfig.pl" # Run twice
+/usr/bin/su loxberry -c "export PERL5LIB=$LBHOME/libs/perllib && $LBHOME/bin/createconfig.pl"
+/usr/bin/su loxberry -c "export PERL5LIB=$LBHOME/libs/perllib && $LBHOME/bin/createconfig.pl" # Run twice
 export PERL5LIB=$LBHOME/libs/perllib && $LBHOME/sbin/mqtt-handler.pl action=updateconfig
 
 if [ ! -e $LBHOME/config/system/general.json ]; then
@@ -1043,8 +1042,9 @@ chown -R loxberry:loxberry $LBHOME/webfrontend/html/system/tools/mqtt
 
 # Set Timezone to LoxBerry's Standard
 TITLE "Setting Timezone to Default..."
-timedatectl set-timezone Europe/Berlin
-timedatectl
+/usr/bin/timedatectl set-timezone Europe/Berlin
+/usr/sbin/dpkg-reconfigure -f noninteractive tzdata
+/usr/bin/timedatectl
 
 # Restart Systemd Login Service
 TITLE "Correct Systemd Login Service..."
@@ -1083,16 +1083,16 @@ fi
 
 # The end
 export PERL5LIB=$LBHOME/libs/perllib
-IP=$(perl -e 'use LoxBerry::System; $ip = LoxBerry::System::get_localip(); print $ip; exit;')
-echo -e "\n\n\n${GREEN}WE ARE DONE! :-)${RESET}"
-echo -e "\n\n${RED}If you are *NOT* connected via ethernet and dhcp, configure your"
-echo -e "network now with dietpi-config!"
-echo -e "\nIf you are done, you have to reboot your LoxBerry now!${RESET}"
-echo -e "\n${GREEN}Then point your browser to http://$IP or http://loxberry"
-echo -e "\nIf you would like to login via SSH, use user 'loxberry' and pass 'loxberry'."
-echo -e "Root's password is 'loxberry', too (you cannot login directly via SSH)."
-echo -e "\nGood Bye.\n\n${RESET}"
+IP=$(/usr/bin/perl -e 'use LoxBerry::System; $ip = LoxBerry::System::get_localip(); print $ip; exit;')
+/usr/bin/echo -e "\n\n\n${GREEN}WE ARE DONE! :-)${RESET}"
+/usr/bin/echo -e "\n\n${RED}If you are *NOT* connected via ethernet and dhcp, configure your"
+/usr/bin/echo -e "network now with dietpi-config!"
+/usr/bin/echo -e "\nIf you are done, you have to reboot your LoxBerry now!${RESET}"
+/usr/bin/echo -e "\n${GREEN}Then point your browser to http://$IP or http://loxberry"
+/usr/bin/echo -e "\nIf you would like to login via SSH, use user 'loxberry' and pass 'loxberry'."
+/usr/bin/echo -e "Root's password is 'loxberry', too (you cannot login directly via SSH)."
+/usr/bin/echo -e "\nGood Bye.\n\n${RESET}"
 
-touch /boot/rootfsresized
+/usr/bin/touch /boot/rootfsresized
 
 exit 0
