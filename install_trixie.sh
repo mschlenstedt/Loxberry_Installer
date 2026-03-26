@@ -301,16 +301,16 @@ if [ ! -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
 	exit 1
 fi
 
-# Alle gewuenschten Paketnamen extrahieren (Zeilen die mit "ii " beginnen)
+## Alle gewuenschten Paketnamen extrahieren (Zeilen die mit "ii " beginnen)
 #WANTED=$(awk '/^ii / {print $2}' "$LBHOME/packages${TARGET_VERSION_ID}.txt" | sed 's/:.*$//')
 #
-# Bereits installierte Pakete
+## Bereits installierte Pakete
 #INSTALLED=$(dpkg-query -W -f='${Package}\n' 2>/dev/null | sort -u)
 #
-# Verfuegbare Pakete (im Repo vorhanden)
+## Verfuegbare Pakete (im Repo vorhanden)
 #AVAILABLE=$(apt-cache pkgnames 2>/dev/null | sort -u)
 #
-# Delta: gewuenscht, verfuegbar, aber noch nicht installiert
+## Delta: gewuenscht, verfuegbar, aber noch nicht installiert
 #PACKAGES=""
 #SKIPPED_NOTFOUND=""
 #for pkg in $WANTED; do
@@ -319,7 +319,7 @@ fi
 #                        PACKAGES+="$pkg "
 #                fi
 #        else
-#                SKIPPED_NOTFOUND+="$pkg "
+#                SKIPPED_NOTFOUND+="$pkg\n"
 #        fi
 #done
 #
@@ -334,6 +334,8 @@ fi
 #
 #echo -e "\n${BOLD}Installing $(echo $PACKAGES | wc -w) packages...${RESET}\n"
 #
+#exit
+#
 #/usr/bin/apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install $PACKAGES
 #if [ $? != 0 ]; then
 #        FAIL "Could not install (at least some) queued packages.\n"
@@ -343,6 +345,7 @@ fi
 #fi
 
 if [ -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
+	NOTFOUND=""
         PACKAGES=""
         /usr/bin/echo ""
         while read entry
