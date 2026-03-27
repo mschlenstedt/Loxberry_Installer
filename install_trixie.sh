@@ -264,11 +264,11 @@ else
 	fi
 fi
 
-#Get latest packagesXX.txt
-/usr/bin/curl -L -o $LBHOME/packages${TARGET_VERSION_ID}.txt https://raw.githubusercontent.com/mschlenstedt/Loxberry/refs/heads/master/packages${TARGET_VERSION_ID}.txt
+# Get latest packagesXX.txt - just for testing
+# /usr/bin/curl -L -o $LBHOME/packages${TARGET_VERSION_ID}.txt https://raw.githubusercontent.com/mschlenstedt/Loxberry/refs/heads/master/packages${TARGET_VERSION_ID}.txt
 
 # Adding User loxberry
-TITLE "Adding user 'loxberry', setting default passwd, resetting user 'dietpi'..."
+TITLE "Adding user 'loxberry', setting default passwd..."
 
 /usr/bin/killall -u loxberry
 /usr/bin/sleep 3
@@ -290,28 +290,10 @@ else
 	OK "Successfully set default password for user 'loxberry'."
 fi
 
-/usr/bin/echo 'root:loxberry' | /usr/sbin/chpasswd -c SHA512
-if [ $? != 0 ]; then
-	FAIL "Could not set password for user 'root'.\n"
-	exit 1
-else
-	OK "Successfully set default password for user 'root'."
-fi
-
-newdietpipassword=$(/usr/bin/echo $random | /usr/bin/md5sum | /usr/bin/head -c 20; echo)
-/usr/bin/echo "dietpi:$newdietpipassword" | /usr/sbin/chpasswd -c SHA512
-if [ $? != 0 ]; then
-	FAIL "Could not set password for user 'dietpi'.\n"
-	exit 1
-else
-	OK "Successfully set default password for user 'dietpi'."
-fi
-
-
 # Configuring hardware architecture
-TITLE "Configuring your hardware architecture $G_HW_ARCH_NAM..."
+TITLE "Configuring your hardware architecture $G_HW_ARCH_NAME..."
 
-HWMODELFILENAME=$(/usr/bin/cat /boot/dietpi/func/dietpi-obtain_hw_model | /usr/bin/grep "G_HW_MODEL $G_HW_MODEL " | /usr/bin/awk '/.*G_HW_MODEL .*/ {for(i=4; i<=NF; ++i) printf "%s_", $i; print ""}' | /usr/bin/sed 's/\//_/g' | /usr/bin/sed 's/[()]//g' | /usr/bin/sed 's/_$//' | /usr/bin/tr '[:upper:]' '[:lower:]')
+HWMODELFILENAME=`echo "$G_HW_MODEL_NAME" | tr " " "_" | sed "s/[^[:alnum:]_]\+//g"`
 /usr/bin/echo $HWMODELFILENAME > $LBHOME/config/system/is_hwmodel_$HWMODELFILENAME.cfg
 /usr/bin/echo $G_HW_ARCH_NAME > $LBHOME/config/system/is_arch_$G_HW_ARCH_NAME.cfg
 
@@ -342,6 +324,7 @@ TITLE "Installing additional software packages from apt repository..."
 /boot/dietpi/func/dietpi-set_software apt clean
 
 # Configure PHP - we want still PHP7.4
+TITLE "Preparing PHP Installation..."
 cd `mktemp -d`
 wget -q https://packages.sury.org/debsuryorg-archive-keyring.deb
 apt-get install ./debsuryorg-archive-keyring.deb
@@ -353,6 +336,12 @@ Suites: $VERSION_CODENAME
 Components: main
 Signed-By: /usr/share/keyrings/debsuryorg-archive-keyring.gpg
 EOF
+
+# Installing YARN
+TITLE "Preparing Yarn Installation..."
+/usr/bin/curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | /usr/bin/gpg --dearmor | /usr/bin/tee /usr/share/keyrings/yarnkey.gpg >/dev/null
+/usr/bin/echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | /usr/bin/tee /etc/apt/sources.list.d/yarn.list
+
 /usr/bin/apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
 apt-cache policy php
 
@@ -595,9 +584,7 @@ else
 	OK "Successfully set up service for Mosquitto."
 fi
 
-# PHP - we install PHP8.2 for testing and 7.4 for production
-#apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install php${PHPVER_TEST} php${PHPVER_PROD}
-
+# PHP - we install PHP8.x for testing and 7.4 for production
 TITLE "Configuring PHP ${PHPVER_PROD}..."
 
 if [ ! -e /etc/php/${PHPVER_PROD} ]; then
