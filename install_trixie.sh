@@ -342,6 +342,12 @@ TITLE "Preparing Yarn Installation..."
 /usr/bin/curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | /usr/bin/gpg --dearmor | /usr/bin/tee /usr/share/keyrings/yarnkey.gpg >/dev/null
 /usr/bin/echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | /usr/bin/tee /etc/apt/sources.list.d/yarn.list
 
+# Installing Cloudflare for Remote Support
+TITLE "Preparing Cloudflare Installation..."
+sudo mkdir -p --mode=0755 /usr/share/keyrings
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
+
 /usr/bin/apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
 apt-cache policy php
 
