@@ -3,11 +3,11 @@
 ########################################################################
 # Adjust this to the latest release image
 
-TARGET_VERSION_ID="12"
-TARGET_PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+TARGET_VERSION_ID="13"
+TARGET_PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 LBHOME="/opt/loxberry"
 PHPVER_PROD=7.4
-PHPVER_TEST=8.2
+PHPVER_TEST=8.4
 
 #
 ########################################################################
@@ -264,8 +264,13 @@ else
 	fi
 fi
 
+# Get latest packagesXX.txt - if not in Repo
+if [ ! -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
+	/usr/bin/curl -L -o $LBHOME/packages${TARGET_VERSION_ID}.txt https://raw.githubusercontent.com/mschlenstedt/Loxberry/refs/heads/master/packages${TARGET_VERSION_ID}.txt
+fi
+
 # Adding User loxberry
-TITLE "Adding user 'loxberry', setting default passwd, resetting user 'dietpi'..."
+TITLE "Adding user 'loxberry', setting default passwd..."
 
 /usr/bin/killall -u loxberry
 /usr/bin/sleep 3
@@ -287,28 +292,10 @@ else
 	OK "Successfully set default password for user 'loxberry'."
 fi
 
-/usr/bin/echo 'root:loxberry' | /usr/sbin/chpasswd -c SHA512
-if [ $? != 0 ]; then
-	FAIL "Could not set password for user 'root'.\n"
-	exit 1
-else
-	OK "Successfully set default password for user 'root'."
-fi
-
-newdietpipassword=$(/usr/bin/echo $random | /usr/bin/md5sum | /usr/bin/head -c 20; echo)
-/usr/bin/echo "dietpi:$newdietpipassword" | /usr/sbin/chpasswd -c SHA512
-if [ $? != 0 ]; then
-	FAIL "Could not set password for user 'dietpi'.\n"
-	exit 1
-else
-	OK "Successfully set default password for user 'dietpi'."
-fi
-
-
 # Configuring hardware architecture
-TITLE "Configuring your hardware architecture $G_HW_ARCH_NAM..."
+TITLE "Configuring your hardware architecture $G_HW_ARCH_NAME..."
 
-HWMODELFILENAME=$(/usr/bin/cat /boot/dietpi/func/dietpi-obtain_hw_model | /usr/bin/grep "G_HW_MODEL $G_HW_MODEL " | /usr/bin/awk '/.*G_HW_MODEL .*/ {for(i=4; i<=NF; ++i) printf "%s_", $i; print ""}' | /usr/bin/sed 's/\//_/g' | /usr/bin/sed 's/[()]//g' | /usr/bin/sed 's/_$//' | /usr/bin/tr '[:upper:]' '[:lower:]')
+HWMODELFILENAME=`echo "$G_HW_MODEL_NAME" | tr " " "_" | sed "s/[^[:alnum:]_]\+//g"`
 /usr/bin/echo $HWMODELFILENAME > $LBHOME/config/system/is_hwmodel_$HWMODELFILENAME.cfg
 /usr/bin/echo $G_HW_ARCH_NAME > $LBHOME/config/system/is_arch_$G_HW_ARCH_NAME.cfg
 
@@ -336,47 +323,63 @@ TITLE "Installing additional software packages from apt repository..."
 
 /boot/dietpi/func/dietpi-set_software apt reset
 /boot/dietpi/func/dietpi-set_software apt compress disable
-/boot/dietpi/func/dietpi-set_software apt cache clean
+/boot/dietpi/func/dietpi-set_software apt clean
 
-# Configure PHP - we want PHP7.4 as default while Bookworm only has 8.2
-/usr/bin/curl -sL https://packages.sury.org/php/apt.gpg | /usr/bin/gpg --dearmor | /usr/bin/tee /usr/share/keyrings/deb.sury.org-php.gpg >/dev/null
-/usr/bin/echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
+# Configure PHP - we want still PHP7.4
+TITLE "Preparing PHP Installation..."
+cd `mktemp -d`
+wget -q https://packages.sury.org/debsuryorg-archive-keyring.deb
+apt-get install ./debsuryorg-archive-keyring.deb
+. /etc/os-release
+cat << EOF > /etc/apt/sources.list.d/sury-php.sources
+Types: deb deb-src
+URIs: https://packages.sury.org/php
+Suites: $VERSION_CODENAME
+Components: main
+Signed-By: /usr/share/keyrings/debsuryorg-archive-keyring.gpg
+EOF
+
+# Installing YARN
+TITLE "Preparing Yarn Installation..."
+/usr/bin/curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | /usr/bin/gpg --dearmor | /usr/bin/tee /usr/share/keyrings/yarnkey.gpg >/dev/null
+/usr/bin/echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | /usr/bin/tee /etc/apt/sources.list.d/yarn.list
+
+# Installing Cloudflare for Remote Support
+TITLE "Preparing Cloudflare Installation..."
+sudo mkdir -p --mode=0755 /usr/share/keyrings
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
 
 /usr/bin/apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
+apt-cache policy php
 
-if [ -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
-        PACKAGES=""
-        /usr/bin/echo ""
-        while read entry
-        do
-                if /usr/bin/echo $entry | /usr/bin/grep -Eq "^ii "; then
-                        VAR=$(/usr/bin/echo $entry | sed "s/  / /g" | /usr/bin/cut -d " " -f 2 | /usr/bin/sed "s/:.*\$//")
-                        PINFO=$(/usr/bin/apt-cache show $VAR 2>&1)
-                        if /usr/bin/echo $PINFO | /usr/bin/grep -Eq "N: Unable to locate"; then
-                        	WARNING "Unable to locate package $PACKAGE. Skipping..."
-                                continue
-                        fi
-                        PACKAGE=$(echo $PINFO | /usr/bin/grep "Package: " | /usr/bin/cut -d " " -f 2)
-			if [ -z $PACKAGE ] || [ $PACKAGE = "" ]; then
-				continue
-			fi
-                        if /usr/bin/dpkg -s $PACKAGE > /dev/null 2>&1; then
-                        	INFO "$PACKAGE seems to be already installed. Skipping..."
-                                continue
-                        fi
-                        OK "Add package $PACKAGE to the installation queue..."
-                        PACKAGES+="$PACKAGE "
+# Alle gewuenschten Paketnamen extrahieren (Zeilen die mit "ii " beginnen)
+WANTED=$(awk '/^ii / {print $2}' "$LBHOME/packages${TARGET_VERSION_ID}.txt" | sed 's/:.*$//')
+
+# Bereits installierte Pakete
+INSTALLED=$(dpkg-query -W -f='${Package}\n' 2>/dev/null | sort -u)
+
+# Verfuegbare Pakete (im Repo vorhanden)
+AVAILABLE=$(apt-cache pkgnames 2>/dev/null | sort -u)
+
+# Delta: gewuenscht, verfuegbar, aber noch nicht installiert
+PACKAGES=""
+SKIPPED_NOTFOUND=""
+for pkg in $WANTED; do
+        if echo "$AVAILABLE" | grep -qx "$pkg"; then
+                if ! echo "$INSTALLED" | grep -qx "$pkg"; then
+                        PACKAGES+="$pkg "
                 fi
-        done < "$LBHOME/packages${TARGET_VERSION_ID}.txt"
-else
-        FAIL "Could not find packages list: $LBHOME/packages$TARGET_VERSION_ID.txt.\n"
-        exit 1
+        else
+                SKIPPED_NOTFOUND+="$pkg\n"
+        fi
+done
+
+if [ -n "$SKIPPED_NOTFOUND" ]; then
+        WARNING "Packages not found in repos (skipped): $SKIPPED_NOTFOUND"
 fi
 
-/usr/bin/echo ""
-/usr/bin/echo "These packages will be installed now:"
-/usr/bin/echo $PACKAGES
-/usr/bin/echo ""
+echo -e "\n${BOLD}Installing $(echo $PACKAGES | wc -w) packages...${RESET}\n"
 
 /usr/bin/apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install $PACKAGES
 if [ $? != 0 ]; then
@@ -386,21 +389,51 @@ else
         OK "Successfully installed all queued packages.\n"
 fi
 
+#if [ -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
+#        PACKAGES=""
+#        /usr/bin/echo ""
+#        while read entry
+#        do
+#                if /usr/bin/echo $entry | /usr/bin/grep -Eq "^ii "; then
+#                        VAR=$(/usr/bin/echo $entry | sed "s/  / /g" | /usr/bin/cut -d " " -f 2 | /usr/bin/sed "s/:.*\$//")
+#                        PINFO=$(/usr/bin/apt-cache show $VAR 2>&1)
+#                        if /usr/bin/echo $PINFO | /usr/bin/grep -Eq "N: Unable to locate"; then
+#                        	WARNING "Unable to locate package $PACKAGE. Skipping..."
+#                                continue
+#                        fi
+#                        PACKAGE=$(echo $PINFO | /usr/bin/grep "Package: " | /usr/bin/cut -d " " -f 2)
+#			if [ -z $PACKAGE ] || [ $PACKAGE = "" ]; then
+#				continue
+#			fi
+#                       if /usr/bin/dpkg -s $PACKAGE > /dev/null 2>&1; then
+#                       	INFO "$PACKAGE seems to be already installed. Skipping..."
+#                                continue
+#                        fi
+#                        OK "Add package $PACKAGE to the installation queue..."
+#                        PACKAGES+="$PACKAGE "
+#                fi
+#        done < "$LBHOME/packages${TARGET_VERSION_ID}.txt"
+#else
+#        FAIL "Could not find packages list: $LBHOME/packages$TARGET_VERSION_ID.txt.\n"
+#        exit 1
+#fi
+
+#/usr/bin/echo ""
+#/usr/bin/echo "These packages will be installed now:"
+#/usr/bin/echo $PACKAGES
+#/usr/bin/echo ""
+#
+#/usr/bin/apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install $PACKAGES
+#if [ $? != 0 ]; then
+#        FAIL "Could not install (at least some) queued packages.\n"
+#	exit 1
+#else
+#        OK "Successfully installed all queued packages.\n"
+#fi
+
 /boot/dietpi/func/dietpi-set_software apt compress enable
-/boot/dietpi/func/dietpi-set_software apt cache clean
+/boot/dietpi/func/dietpi-set_software apt clean
 /usr/bin/apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
-
-# Remove dhcpd - See issue 135
-TITLE "Removing dhcpcd5..."
-
-/usr/bin/apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages purge dhcpcd5
-
-# Remove appamor
-TITLE "Removing AppArmor..."
-
-/usr/bin/apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages purge apparmor
-
-/usr/bin/apt-get -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages --purge autoremove
 
 # Adding user loxberry to different additional groups
 TITLE "Adding user LoxBerry to some additional groups..."
@@ -559,9 +592,7 @@ else
 	OK "Successfully set up service for Mosquitto."
 fi
 
-# PHP - we install PHP8.2 for testing and 7.4 for production
-#apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install php${PHPVER_TEST} php${PHPVER_PROD}
-
+# PHP - we install PHP8.x for testing and 7.4 for production
 TITLE "Configuring PHP ${PHPVER_PROD}..."
 
 if [ ! -e /etc/php/${PHPVER_PROD} ]; then
