@@ -351,6 +351,11 @@ echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudf
 /usr/bin/apt-get -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-releaseinfo-change update
 apt-cache policy php
 
+# Get packagesXX.txt if not exist
+if ( ! -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ) {
+	/usr/bin/curl -L -o $LBHOME/$LBHOME/packages${TARGET_VERSION_ID}.txt https://raw.githubusercontent.com/mschlenstedt/Loxberry/refs/heads/master/packages${TARGET_VERSION_ID}.txt
+}
+
 # Alle gewuenschten Paketnamen extrahieren (Zeilen die mit "ii " beginnen)
 WANTED=$(awk '/^ii / {print $2}' "$LBHOME/packages${TARGET_VERSION_ID}.txt" | sed 's/:.*$//')
 
