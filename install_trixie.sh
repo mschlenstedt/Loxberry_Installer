@@ -265,9 +265,9 @@ else
 fi
 
 # Get latest packagesXX.txt - if not in Repo
-if ( ! -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ) {
+if [ ! -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
 	/usr/bin/curl -L -o $LBHOME/packages${TARGET_VERSION_ID}.txt https://raw.githubusercontent.com/mschlenstedt/Loxberry/refs/heads/master/packages${TARGET_VERSION_ID}.txt
-}
+fi
 
 
 # Adding User loxberry
