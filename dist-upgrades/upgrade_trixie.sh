@@ -156,6 +156,20 @@ TITLE "Installing additional software packages from apt repository..."
 /boot/dietpi/func/dietpi-set_software apt compress disable
 /boot/dietpi/func/dietpi-set_software apt cache clean
 
+# Configure PHP - we want still PHP7.4
+TITLE "Preparing PHP Installation..."
+cd `mktemp -d`
+wget -q https://packages.sury.org/debsuryorg-archive-keyring.deb
+apt-get install ./debsuryorg-archive-keyring.deb
+. /etc/os-release
+cat << EOF > /etc/apt/sources.list.d/sury-php.sources
+Types: deb deb-src
+URIs: https://packages.sury.org/php
+Suites: $VERSION_CODENAME
+Components: main
+Signed-By: /usr/share/keyrings/debsuryorg-archive-keyring.gpg
+EOF
+
 # Installing YARN
 TITLE "Preparing Yarn Installation..."
 /usr/bin/curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | /usr/bin/gpg --dearmor | /usr/bin/tee /usr/share/keyrings/yarnkey.gpg >/dev/null
