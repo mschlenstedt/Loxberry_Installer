@@ -136,12 +136,6 @@ if [ $VERSION_ID -ne $TARGET_VERSION_ID ]; then
 	exit 1
 fi
 
-if [ ! -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
-	echo -e "\n${RED}We cannot find some files on your LoxBerry. Nake sure you run LoxBerry Update first!"
-	echo -e "We need the latest version of LoxBerry!${RESET}\n"
-	exit 1
-fi
-
 # Welcome screen with overview
 echo -e "\nThis script will upgrade ${BOLD}${ULINE}LoxBerry${RESET} to run on ${BOLD}${ULINE}$TARGET_PRETTY_NAME${RESET}.\n"
 echo -e "${RED}${BOLD}WARNING!${RESET}${RED} You cannot undo the upgrade! Make sure you have a BACKUP of oyur LoxBerry!"
