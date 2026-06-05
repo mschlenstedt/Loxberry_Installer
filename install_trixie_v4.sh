@@ -214,7 +214,12 @@ else
 	LBTARBALL=$(/usr/bin/echo $RELEASEJSON | /usr/bin/jq -r ".tarball_url")
 
 	if [ -z $LBVERSION ] || [ $LBVERSION = "null" ]; then
-		FAIL "Cannot download latest release information from GitHub.\n"
+		GHMESSAGE=$(/usr/bin/echo $RELEASEJSON | /usr/bin/jq -r ".message // empty")
+		if [ ! -z "$GHMESSAGE" ]; then
+			FAIL "Cannot download latest release information from GitHub: $GHMESSAGE\n"
+		else
+			FAIL "Cannot download latest release information from GitHub.\n"
+		fi
 		exit 1
 	fi
 fi
