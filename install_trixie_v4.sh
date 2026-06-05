@@ -233,9 +233,8 @@ fi
 /usr/bin/echo -e "DietPi Version:     $G_DIETPI_VERSION_CORE.$G_DIETPI_VERSION_SUB"
 /usr/bin/echo -e "Hardware Model:     $G_HW_MODEL_NAME"
 /usr/bin/echo -e "Architecture:       $G_HW_ARCH_NAME"
-/usr/bin/echo -e "\n\nHit ${BOLD}<CTRL>+C${RESET} now to stop, any other input will continue.\n"
-echo -e "Press ${BOLD}<CTRL>+C${RESET} to abort. Installation continues automatically in 30 seconds..."
-sleep 30
+echo -e "Press ${BOLD}<CTRL>+C${RESET} to abort. Installation continues automatically in 15 seconds..."
+sleep 15
 /usr/bin/tput clear
 
 # Download Release
