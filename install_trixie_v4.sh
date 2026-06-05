@@ -36,13 +36,16 @@ echo -e "\n\nNote! If you were logged in as user 'loxberry' and used 'su' to swi
 sleep 3
 
 # Commandline options
-while getopts "t:b:" o; do
+while getopts "t:b:u:" o; do
     case "${o}" in
         t)
             TAG=${OPTARG}
             ;;
         b)
             BRANCH=${OPTARG}
+            ;;
+        u)
+            GITHUB_AUTH=${OPTARG}
             ;;
         *)
             ;;
@@ -198,7 +201,11 @@ fi
 if [ ! -z $BRANCH ]; then
 	LBVERSION="Branch $BRANCH (latest)"
 else
-	RELEASEJSON=`/usr/bin/curl -s \
+	GITHUB_AUTH_OPT=""
+	if [ ! -z "$GITHUB_AUTH" ]; then
+		GITHUB_AUTH_OPT="-u $GITHUB_AUTH"
+	fi
+	RELEASEJSON=`/usr/bin/curl -s $GITHUB_AUTH_OPT \
 		-H "Accept: application/vnd.github+json" \
 		https://api.github.com/repos/mschlenstedt/Loxberry/releases/$TARGETRELEASE`
 
