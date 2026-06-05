@@ -234,7 +234,8 @@ fi
 /usr/bin/echo -e "Hardware Model:     $G_HW_MODEL_NAME"
 /usr/bin/echo -e "Architecture:       $G_HW_ARCH_NAME"
 /usr/bin/echo -e "\n\nHit ${BOLD}<CTRL>+C${RESET} now to stop, any other input will continue.\n"
-read -n 1 -s -r -p "Press any key to continue"
+echo -e "Press ${BOLD}<CTRL>+C${RESET} to abort. Installation continues automatically in 30 seconds..."
+sleep 30
 /usr/bin/tput clear
 
 # Download Release
