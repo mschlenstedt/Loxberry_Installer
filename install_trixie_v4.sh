@@ -1000,7 +1000,11 @@ export PERL5LIB=$LBHOME/libs/perllib && $LBHOME/sbin/mqtt-handler.pl action=upda
 # Create Python venv for MQTT Gateway V2
 TITLE "Creating Python venv for MQTT Gateway V2..."
 python3 -m venv $LBHOME/system/python_venv/mqttgateway
-$LBHOME/system/python_venv/mqttgateway/bin/pip install -q -r $LBHOME/system/python_venv/requirements_mqttgateway.txt
+if [ -f $LBHOME/system/python_venv/requirements_mqttgateway.txt ]; then
+	$LBHOME/system/python_venv/mqttgateway/bin/pip install -q -r $LBHOME/system/python_venv/requirements_mqttgateway.txt
+else
+	$LBHOME/system/python_venv/mqttgateway/bin/pip install -q aiomqtt aiohttp
+fi
 chown -R loxberry:loxberry $LBHOME/system/python_venv
 OK "Python venv for MQTT Gateway V2 created."
 
