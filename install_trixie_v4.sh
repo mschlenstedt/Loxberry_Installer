@@ -997,6 +997,13 @@ TITLE "Create LoxBerry Config from Defaults..."
 /usr/bin/jq '.Mqtt.Gatewayversion = 2' /opt/loxberry/config/system/general.json > /tmp/gj.tmp && mv /tmp/gj.tmp /opt/loxberry/config/system/general.json
 export PERL5LIB=$LBHOME/libs/perllib && $LBHOME/sbin/mqtt-handler.pl action=updateconfig
 
+# Create Python venv for MQTT Gateway V2
+TITLE "Creating Python venv for MQTT Gateway V2..."
+python3 -m venv $LBHOME/system/python_venv/mqttgateway
+$LBHOME/system/python_venv/mqttgateway/bin/pip install -q -r $LBHOME/system/python_venv/requirements_mqttgateway.txt
+chown -R loxberry:loxberry $LBHOME/system/python_venv
+OK "Python venv for MQTT Gateway V2 created."
+
 if [ ! -e $LBHOME/config/system/general.json ]; then
 	FAIL "Could not create default config files.\n"
 	exit 1
