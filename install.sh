@@ -25,9 +25,9 @@ if (( $EUID != 0 )); then
     exit 1
 fi
 
-if [ -e /boot/rootfsresized ]; then
+if [ -e  $LBHOME/config/system/do_lbupdate ]; then
 	echo "This script was already executed on this LoxBerry. You cannot reinstall LoxBerry."
-	echo "If you are sure what you are doing, rm /boot/rootfsresized and restart again."
+	echo "If you are sure what you are doing, rm $LBHOME/config/system/do_lbupdate and restart again."
 	exit 1
 fi
 
@@ -36,13 +36,16 @@ echo -e "\n\nNote! If you were logged in as user 'loxberry' and used 'su' to swi
 sleep 3
 
 # Commandline options
-while getopts "t:b:" o; do
+while getopts "t:b:u:" o; do
     case "${o}" in
         t)
             TAG=${OPTARG}
             ;;
         b)
             BRANCH=${OPTARG}
+            ;;
+        u)
+            GITHUB_AUTH=${OPTARG}
             ;;
         *)
             ;;
@@ -198,7 +201,11 @@ fi
 if [ ! -z $BRANCH ]; then
 	LBVERSION="Branch $BRANCH (latest)"
 else
-	RELEASEJSON=`/usr/bin/curl -s \
+	GITHUB_AUTH_OPT=""
+	if [ ! -z "$GITHUB_AUTH" ]; then
+		GITHUB_AUTH_OPT="-u $GITHUB_AUTH"
+	fi
+	RELEASEJSON=`/usr/bin/curl -s $GITHUB_AUTH_OPT \
 		-H "Accept: application/vnd.github+json" \
 		https://api.github.com/repos/mschlenstedt/Loxberry/releases/$TARGETRELEASE`
 
@@ -207,7 +214,12 @@ else
 	LBTARBALL=$(/usr/bin/echo $RELEASEJSON | /usr/bin/jq -r ".tarball_url")
 
 	if [ -z $LBVERSION ] || [ $LBVERSION = "null" ]; then
-		FAIL "Cannot download latest release information from GitHub.\n"
+		GHMESSAGE=$(/usr/bin/echo $RELEASEJSON | /usr/bin/jq -r ".message // empty")
+		if [ ! -z "$GHMESSAGE" ]; then
+			FAIL "Cannot download latest release information from GitHub: $GHMESSAGE\n"
+		else
+			FAIL "Cannot download latest release information from GitHub.\n"
+		fi
 		exit 1
 	fi
 fi
@@ -221,8 +233,10 @@ fi
 /usr/bin/echo -e "DietPi Version:     $G_DIETPI_VERSION_CORE.$G_DIETPI_VERSION_SUB"
 /usr/bin/echo -e "Hardware Model:     $G_HW_MODEL_NAME"
 /usr/bin/echo -e "Architecture:       $G_HW_ARCH_NAME"
-/usr/bin/echo -e "\n\nHit ${BOLD}<CTRL>+C${RESET} now to stop, any other input will continue.\n"
-read -n 1 -s -r -p "Press any key to continue"
+/usr/bin/echo -e ""
+/usr/bin/echo -e ""
+echo -e "Press ${BOLD}<CTRL>+C${RESET} to abort. Installation continues automatically in 15 seconds..."
+sleep 15
 /usr/bin/tput clear
 
 # Download Release
@@ -388,48 +402,6 @@ if [ $? != 0 ]; then
 else
         OK "Successfully installed all queued packages.\n"
 fi
-
-#if [ -e "$LBHOME/packages${TARGET_VERSION_ID}.txt" ]; then
-#        PACKAGES=""
-#        /usr/bin/echo ""
-#        while read entry
-#        do
-#                if /usr/bin/echo $entry | /usr/bin/grep -Eq "^ii "; then
-#                        VAR=$(/usr/bin/echo $entry | sed "s/  / /g" | /usr/bin/cut -d " " -f 2 | /usr/bin/sed "s/:.*\$//")
-#                        PINFO=$(/usr/bin/apt-cache show $VAR 2>&1)
-#                        if /usr/bin/echo $PINFO | /usr/bin/grep -Eq "N: Unable to locate"; then
-#                        	WARNING "Unable to locate package $PACKAGE. Skipping..."
-#                                continue
-#                        fi
-#                        PACKAGE=$(echo $PINFO | /usr/bin/grep "Package: " | /usr/bin/cut -d " " -f 2)
-#			if [ -z $PACKAGE ] || [ $PACKAGE = "" ]; then
-#				continue
-#			fi
-#                       if /usr/bin/dpkg -s $PACKAGE > /dev/null 2>&1; then
-#                       	INFO "$PACKAGE seems to be already installed. Skipping..."
-#                                continue
-#                        fi
-#                        OK "Add package $PACKAGE to the installation queue..."
-#                        PACKAGES+="$PACKAGE "
-#                fi
-#        done < "$LBHOME/packages${TARGET_VERSION_ID}.txt"
-#else
-#        FAIL "Could not find packages list: $LBHOME/packages$TARGET_VERSION_ID.txt.\n"
-#        exit 1
-#fi
-
-#/usr/bin/echo ""
-#/usr/bin/echo "These packages will be installed now:"
-#/usr/bin/echo $PACKAGES
-#/usr/bin/echo ""
-#
-#/usr/bin/apt-get --no-install-recommends -y --allow-unauthenticated --fix-broken --reinstall --allow-downgrades --allow-remove-essential --allow-change-held-packages install $PACKAGES
-#if [ $? != 0 ]; then
-#        FAIL "Could not install (at least some) queued packages.\n"
-#	exit 1
-#else
-#        OK "Successfully installed all queued packages.\n"
-#fi
 
 /boot/dietpi/func/dietpi-set_software apt compress enable
 /boot/dietpi/func/dietpi-set_software apt clean
@@ -683,29 +655,6 @@ else
 	OK "Successfully set up Apache2 Private Temp Config."
 fi
 
-# Configuring Network Interfaces
-TITLE "Configuring Network..."
-
-# Network config
-if [ ! -L /etc/network/interfaces ]; then
-	mv /etc/network/interfaces /etc/network/interfaces.old
-fi
-if [ -L /etc/network/interfaces ]; then  
-    rm /etc/network/interfaces
-fi
-ln -s $LBHOME/system/network/interfaces /etc/network/interfaces
-
-if [ ! -L /etc/network/interfaces ]; then
-	FAIL "Could not configure Network Interfaces.\n"
-	exit 1
-else
-	OK "Successfully configured Network Interfaces."
-fi
-
-if [ -e /boot/config.txt ]; then # Enable Wifi on Raspberrys
-	G_CONFIG_INJECT 'dtoverlay=disable-wifi' '#dtoverlay=disable-wifi' /boot/config.txt
-fi
-
 # Configuring Python 3 - reenable pip installations
 TITLE "Configuring Python3..."
 
@@ -822,14 +771,6 @@ else
 	OK "Successfully set up Cron.d."
 fi
 cp /etc/cron.d.orig/* /etc/cron.d
-
-# Skel for system logs, LB system logs and LB plugin logs
-#if [ -d $LBHOME/log/skel_system/ ]; then
-#    find $LBHOME/log/skel_system/ -type f -exec rm {} \;
-#fi
-#if [ -d $LBHOME/log/skel_syslog/ ]; then
-#    find $LBHOME/log/skel_syslog/ -type f -exec rm {} \;
-#fi
 
 # USB Mounts
 TITLE "Configuring automatic USB Mounts..."
@@ -985,10 +926,9 @@ fi
 
 # Enable LoxBerry Update after next reboot
 TITLE "Enable LoxBerry update after next reboot..."
+/usr/bin/touch $LBHOME/config/system/do_lbupdate
 
-/usr/bin/touch /boot/do_lbupdate
-
-if [ ! -e /boot/do_lbupdate ]; then
+if [ ! -e $LBHOME/config/system/do_lbupdate ]; then
 	FAIL "Could not enable LoxBerry Update.\n"
 	exit 1
 else
@@ -1051,10 +991,18 @@ fi
 
 # Create Config
 TITLE "Create LoxBerry Config from Defaults..."
-
 /usr/bin/su loxberry -c "export PERL5LIB=$LBHOME/libs/perllib && $LBHOME/bin/createconfig.pl"
 /usr/bin/su loxberry -c "export PERL5LIB=$LBHOME/libs/perllib && $LBHOME/bin/createconfig.pl" # Run twice
+# Set MQTT Gateway to V2 (due to updates the default is V1 still)
+/usr/bin/jq '.Mqtt.Gatewayversion = 2' /opt/loxberry/config/system/general.json > /tmp/gj.tmp && mv /tmp/gj.tmp /opt/loxberry/config/system/general.json
 export PERL5LIB=$LBHOME/libs/perllib && $LBHOME/sbin/mqtt-handler.pl action=updateconfig
+
+# Create Python venv for MQTT Gateway V2
+TITLE "Creating Python venv for MQTT Gateway V2..."
+python3 -m venv $LBHOME/system/python_venv/mqttgateway
+$LBHOME/system/python_venv/mqttgateway/bin/pip install -q -r $LBHOME/system/python_venv/requirements_mqttgateway.txt
+chown -R loxberry:loxberry $LBHOME/system/python_venv
+OK "Python venv for MQTT Gateway V2 created."
 
 if [ ! -e $LBHOME/config/system/general.json ]; then
 	FAIL "Could not create default config files.\n"
@@ -1102,7 +1050,6 @@ cp $LBHOME/.profile /root
 
 # Set correct File Permissions - again
 TITLE "Setting File Permissions (again)..."
-
 $LBHOME/sbin/resetpermissions.sh
 
 if [ $? != 0 ]; then
@@ -1123,7 +1070,5 @@ IP=$(/usr/bin/perl -e 'use LoxBerry::System; $ip = LoxBerry::System::get_localip
 /usr/bin/echo -e "\nIf you would like to login via SSH, use user 'loxberry' and pass 'loxberry'."
 /usr/bin/echo -e "Root's password is 'loxberry', too (you cannot login directly via SSH)."
 /usr/bin/echo -e "\nGood Bye.\n\n${RESET}"
-
-/usr/bin/touch /boot/rootfsresized
 
 exit 0
