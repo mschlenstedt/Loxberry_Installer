@@ -1080,8 +1080,15 @@ IP=$(/usr/bin/perl -e 'use LoxBerry::System; $ip = LoxBerry::System::get_localip
 /usr/bin/echo -e "network now with dietpi-config!"
 /usr/bin/echo -e "\nIf you are done, you have to reboot your LoxBerry now!${RESET}"
 /usr/bin/echo -e "\n${GREEN}Then point your browser to http://$IP or http://loxberry"
-/usr/bin/echo -e "\nIf you would like to login via SSH, use user 'loxberry' and pass 'loxberry'."
-/usr/bin/echo -e "Root's password is 'loxberry', too (you cannot login directly via SSH)."
+/usr/bin/echo -e "\nUse user 'loxberry' and pass 'loxberry' for the first login to the"
+/usr/bin/echo -e "webinterface. It is strongly recommended to change your password during"
+/usr/bin/echo -e "initial setup."
+/usr/bin/echo -e "\nIf you would like to login via SSH at a later time, use user 'loxberry'"
+/usr/bin/echo -e "and the password you have configured."
+/usr/bin/echo -e "\nRoot's password was changed by yourself during initial setup of dietpi."
+/usr/bin/echo -e "If you have not saved this password, you may reset the root password"
+/usr/bin/echo -e "with the LoxBerry-Reset-Root plugin. See https://wiki.loxberry.de for"
+/usr/bin/echo -e "details."
 /usr/bin/echo -e "\nGood Bye.\n\n${RESET}"
 
 exit 0
