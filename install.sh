@@ -419,6 +419,7 @@ TITLE "Adding user LoxBerry to some additional groups..."
 /usr/sbin/usermod -a -G video loxberry
 /usr/sbin/usermod -a -G i2c loxberry
 /usr/sbin/usermod -a -G dietpi loxberry
+/usr/sbin/usermod -a -G adm loxberry
 
 OK "Successfully configured additional groups."
 
@@ -633,6 +634,18 @@ if [ ! -L /etc/apache2 ]; then
 	exit 1
 else
 	OK "Successfully set up Apache2 Config."
+fi
+
+# Apache logs stay in the distro default /var/log/apache2 - provide the
+# stable LoxBerry path log/system_tmpfs/apache2 as a symlink
+mkdir -p /var/log/apache2
+rm -rf $LBHOME/log/system_tmpfs/apache2
+ln -sfn /var/log/apache2 $LBHOME/log/system_tmpfs/apache2
+if [ ! -L $LBHOME/log/system_tmpfs/apache2 ]; then
+	FAIL "Could not set up Apache2 log directory symlink.\n"
+	exit 1
+else
+	OK "Successfully set up Apache2 log directory symlink."
 fi
 
 /usr/sbin/a2dismod php*
