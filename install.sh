@@ -550,10 +550,35 @@ else
 fi
 
 # LoxBerry Mosquitto Service
-if [ -e /etc/systemd/system/mosquitto.service ]; then
-	rm /etc/systemd/system/mosquitto.service
+# Integrate LoxBerry's mosquitto needs (tmpfs logfile, createtmpfs boot-ordering)
+# as a systemd DROP-IN that EXTENDS the distro unit - not the old
+# /etc/systemd/system/mosquitto.service whole-unit symlink, which shadowed the
+# distro unit and was silently lost on mosquitto package upgrades. A drop-in is
+# never touched by dpkg, and is kept in sync at runtime by mqtt-handler.pl
+# (ensure_mosquitto_dropin).
+# Remove any stale whole-unit override so the distro unit stays the base.
+if [ -e /etc/systemd/system/mosquitto.service ] || [ -L /etc/systemd/system/mosquitto.service ]; then
+	rm -f /etc/systemd/system/mosquitto.service
 fi
-ln -s $LBHOME/system/systemd/mosquitto.service /etc/systemd/system/mosquitto.service
+mkdir -p /etc/systemd/system/mosquitto.service.d
+cat > /etc/systemd/system/mosquitto.service.d/loxberry.conf <<'MOSQEOF'
+# Managed by LoxBerry - do not edit.
+# Extends the distro mosquitto.service with LoxBerry's tmpfs logfile and
+# createtmpfs boot-ordering. A drop-in survives mosquitto package upgrades.
+[Unit]
+After=createtmpfs.service
+Requires=createtmpfs.service
+
+[Service]
+EnvironmentFile=/etc/environment
+ExecStartPre=/bin/mkdir -m 740 -p /var/log/mosquitto
+ExecStartPre=/bin/chown mosquitto /var/log/mosquitto
+ExecStartPre=/bin/touch ${LBSTMPFSLOG}/mosquitto.log
+ExecStartPre=/bin/chown mosquitto:loxberry ${LBSTMPFSLOG}/mosquitto.log
+ExecStartPre=/bin/chmod 640 ${LBSTMPFSLOG}/mosquitto.log
+ExecStartPre=/bin/ln -sf ${LBSTMPFSLOG}/mosquitto.log /var/log/mosquitto/mosquitto.log
+MOSQEOF
+chmod 644 /etc/systemd/system/mosquitto.service.d/loxberry.conf
 /usr/bin/echo ""
 /bin/systemctl daemon-reload
 /bin/systemctl enable mosquitto.service
