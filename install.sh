@@ -317,7 +317,18 @@ HWMODELFILENAME=`echo "$G_HW_MODEL_NAME" | tr " " "_" | sed "s/[^[:alnum:]_]\+//
 if /usr/bin/echo $HWMODELFILENAME | /usr/bin/grep -q "x86_64"; then
 	/usr/bin/echo "x64" > $LBHOME/config/system/is_x64.cfg
 fi
-if /usr/bin/echo $HWMODELFILENAME | /usr/bin/grep -q "raspberry"; then
+# Raspberry Pi detection, multi-stage. DietPi names the model "RPi ..." (not
+# "Raspberry Pi ..."), so grepping the model name for "raspberry" never matched
+# on current DietPi and is_raspberry.cfg was not written. Stage 1: DietPi's
+# numeric hardware model (0-9 is the Raspberry Pi range). Stage 2: fall back to
+# /proc/device-tree/model.
+IS_RASPBERRY=0
+if /usr/bin/echo "$G_HW_MODEL" | /usr/bin/grep -qE '^[0-9]$'; then
+	IS_RASPBERRY=1
+elif [ -r /proc/device-tree/model ] && /usr/bin/tr -d ' ' < /proc/device-tree/model | /usr/bin/grep -qi "raspberry pi"; then
+	IS_RASPBERRY=1
+fi
+if [ "$IS_RASPBERRY" = "1" ]; then
 	/usr/bin/echo "raspberry" > $LBHOME/config/system/is_raspberry.cfg
 fi
 
