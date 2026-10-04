@@ -560,6 +560,24 @@ else
 	OK "Successfully set up service for SSDPD."
 fi
 
+# LoxBerry web terminal (shellinabox)
+# The Debian package only ships a SysV script, from which systemd generates a
+# unit (with a deprecation warning) that starts an unused instance on port
+# 4200. LoxBerry's own unit has the same name and replaces it (#1566).
+if [ -e /etc/systemd/system/shellinabox.service ] || [ -L /etc/systemd/system/shellinabox.service ]; then
+	rm -f /etc/systemd/system/shellinabox.service
+fi
+ln -s $LBHOME/system/systemd/shellinabox.service /etc/systemd/system/shellinabox.service
+/bin/systemctl daemon-reload
+/bin/systemctl enable shellinabox.service
+
+if ! /bin/systemctl is-enabled shellinabox.service; then
+	FAIL "Could not set up Service for the web terminal (shellinabox).\n"
+	exit 1
+else
+	OK "Successfully set up service for the web terminal (shellinabox)."
+fi
+
 # LoxBerry Mosquitto Service
 # Integrate LoxBerry's mosquitto needs (tmpfs logfile, createtmpfs boot-ordering)
 # as a systemd DROP-IN that EXTENDS the distro unit - not the old
